@@ -25,36 +25,58 @@ def connect():
         print(error)
     return conn
 
+# ========================= 상품 목록 조회 (정렬 포함) =========================
+def display_sorted_products(conn):
+    """ 정렬된 상품 목록 조회 및 출력 """
+    while True:
+        print('''
+--------------------- 정렬 기준 선택 ---------------------
+1. 가격순 정렬
+2. 재고 수량순 정렬
+3. ID순 정렬 (기본값)
+-------------------------------------------------------
+        ''')
+        sort_choice = input("정렬 기준을 선택하세요 >>> ").strip()
+
+        if sort_choice == "1":
+            order_by = "price"
+        elif sort_choice == "2":
+            order_by = "stock_quantity"
+        else:
+            order_by = "id"
+
+        print('''
+--------------------- 출력 개수 선택 ---------------------
+1. 상위 10개만 출력
+2. 전체 출력
+-------------------------------------------------------
+        ''')
+        limit_choice = input("출력 개수를 선택하세요 >>> ").strip()
+
+        if limit_choice == "1":
+            limit = "LIMIT 10"
+        else:
+            limit = ""
+
+        query = f"SELECT * FROM products ORDER BY {order_by} DESC {limit}"
+
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        print("\n📦 정렬된 상품 목록")
+        for row in rows:
+            print(row)
+
+        break
+
 # ========================= 상품 관리 기능 =========================
-def query_with_fetchall(conn):
-    """ 편의점 상품 목록 조회 """
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM products")
-    rows = cursor.fetchall()
-    print("\n📦 편의점 상품 목록")
-    print(f"총 상품 개수: {cursor.rowcount}")
-    for row in rows:
-        print(row)
-    return rows
-
-def is_code_exists(conn, code):
-    """ 상품 코드 중복 검사 """
-    query = "SELECT COUNT(*) FROM products WHERE code = %s"
-    cursor = conn.cursor()
-    cursor.execute(query, (code,))
-    count = cursor.fetchone()[0]
-    return count > 0  # True이면 중복 존재
-
 def insert_product(conn):
-    """ 새로운 상품 추가 (중복 코드 검사 포함) """
+    """ 새로운 상품 추가 """
     name = input('상품명을 입력하세요 >>> ')
     price = int(input('가격을 입력하세요 >>> '))
     stock_quantity = int(input('재고 수량을 입력하세요 >>> '))
     code = int(input('상품 코드를 입력하세요 >>> '))
-
-    if is_code_exists(conn, code):
-        print(f"❌ 상품 코드 {code}는 이미 존재합니다. 다른 코드를 입력하세요.")
-        return None
 
     query = "INSERT INTO products(name, price, stock_quantity, code) VALUES(%s, %s, %s, %s)"
     args = (name, price, stock_quantity, code)
@@ -66,23 +88,51 @@ def insert_product(conn):
     print(f"✅ 상품이 추가되었습니다! (ID: {product_id})")
 
 def update_product(conn):
-    """ 상품 정보 수정 """
-    product_id = int(input('수정할 상품 ID를 입력하세요 >>> '))
-    new_name = input('새 상품명을 입력하세요 >>> ')
-    new_price = int(input('새 가격을 입력하세요 >>> '))
-    new_stock_quantity = int(input('새 재고 수량을 입력하세요 >>> '))
-    new_code = int(input('새 상품 코드를 입력하세요 >>> '))
+    """ 상품 정보 수정 (코드 검색 + 특정 항목 선택) """
+    product_code = int(input('수정할 상품의 코드(상품 코드)를 입력하세요 >>> '))
 
-    query = """ UPDATE products
-                SET name = %s, price = %s, stock_quantity = %s, code = %s
-                WHERE id = %s """
-    
-    data = (new_name, new_price, new_stock_quantity, new_code, product_id)
+    # 해당 상품이 존재하는지 확인
+    query = "SELECT id, name, price, stock_quantity, code FROM products WHERE code = %s"
+    cursor = conn.cursor()
+    cursor.execute(query, (product_code,))
+    product = cursor.fetchone()
+
+    if not product:
+        print("❌ 해당 코드의 상품이 존재하지 않습니다.")
+        return
+
+    product_id, current_name, current_price, current_stock, current_code = product
+
+    print(f"\n🔍 현재 상품 정보:")
+    print(f"상품명: {current_name}, 가격: {current_price}, 재고 수량: {current_stock}, 코드: {current_code}")
+
+    print('''
+---------------------- 수정할 항목 선택 ----------------------
+1. 상품명 변경
+2. 재고 수량 변경
+---------------------------------------------------------
+    ''')
+    choice = input("수정할 항목을 선택하세요 >>> ").strip()
+
+    if choice == "1":
+        new_name = input(f"새 상품명을 입력하세요 (현재: {current_name}) >>> ").strip()
+        query = "UPDATE products SET name = %s WHERE id = %s"
+        data = (new_name, product_id)
+    elif choice == "2":
+        new_stock = int(input(f"새 재고 수량을 입력하세요 (현재: {current_stock}) >>> "))
+        query = "UPDATE products SET stock_quantity = %s WHERE id = %s"
+        data = (new_stock, product_id)
+    else:
+        print("❌ 잘못된 입력입니다. 수정 취소.")
+        return
+
     with conn.cursor() as cursor:
         cursor.execute(query, data)
         affected_rows = cursor.rowcount
     conn.commit()
+    
     print(f"✅ 수정된 상품 개수: {affected_rows}")
+
 
 def delete_product(conn):
     """ 상품 삭제 """
@@ -134,7 +184,8 @@ if __name__ == '__main__':
     while True:
         display = '''
 -------------------------------------------------------------
-1. 상품 추가, 2. 상품 수정, 3. 상품 삭제, 4. 상품 검색, 5. 상품 목록, 6. 프로그램 종료
+1. 상품 추가, 2. 상품 수정, 3. 상품 삭제, 4. 상품 검색, 
+5. 상품 목록 (정렬 및 개수 선택), 6. 프로그램 종료
 -------------------------------------------------------------
 메뉴를 선택하세요 >>> '''
         
@@ -149,7 +200,7 @@ if __name__ == '__main__':
         elif choice == "4":
             search_product(conn)
         elif choice == "5":
-            query_with_fetchall(conn)
+            display_sorted_products(conn)
         elif choice == "6":
             print("프로그램을 종료합니다.")
             break
