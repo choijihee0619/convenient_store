@@ -13,6 +13,10 @@ def read_config(filename='app.ini', section='mysql'):
     else:
         raise Exception(f'{section} section not found in the {filename} file')
     return data
+# app.ini 파일에서 데이터베이스 연결 정보를 읽어오는 함수 정의
+# mysql섹션에 저장된 정보 딕셔너리 형태로 반환
+# 존재하지 않으면 없으면 예외 발생시킴
+
 
 def connect():
     """ MySQL 데이터베이스 연결 """
@@ -24,6 +28,9 @@ def connect():
     except Error as error:
         print(error)
     return conn
+# 앞에서 정의한 read_config()함수를 호출, 데이터베이스 연결 정보 가져옴
+# MySQLConnection(**config)으로 MySQL연결하고 성공하면 conn값 반환
+
 
 # ========================= 상품 목록 조회 (정렬 포함) =========================
 def display_sorted_products(conn):
@@ -58,7 +65,7 @@ def display_sorted_products(conn):
         else:
             limit = ""
 
-        query = f"SELECT * FROM products ORDER BY {order_by} DESC {limit}"
+        query = f"SELECT * FROM products ORDER BY {order_by} {limit}"
 
         cursor = conn.cursor()
         cursor.execute(query)
@@ -86,6 +93,14 @@ def insert_product(conn):
         product_id = cursor.lastrowid
     conn.commit()
     print(f"✅ 상품이 추가되었습니다! (ID: {product_id})")
+# 테이블에 추가할 컬럼(name, price, stock_quantity, code)을 query로 받는데,
+# 플레이스홀더(%s)를 사용해서 인젝션방지 - 보안 등 안전하게 데이터베이스에 값 입력 (파라미터화)
+# args 튜플형식으로 (name, price, stock_quantity, code)저장하고
+# cursor.execute(query, args)에서 argu의 값이 query의 %s에 매칭될 것
+# conn.cursor()를 사용해서 데이터베이스와 상호작용할 커서 생성
+# with문을 사용하면 cursor.close하지 않아도 자동으로 닫힘
+# execute로 query와 args insert실행 테이블에 삽입
+# cursor.lastrowid 자동증가된 키값 가져오고 commit으로 변경사항저장 및 반영
 
 def update_product(conn):
     """ 상품 정보 수정 (코드 검색 + 특정 항목 선택) """
@@ -96,6 +111,7 @@ def update_product(conn):
     cursor = conn.cursor()
     cursor.execute(query, (product_code,))
     product = cursor.fetchone()
+# 업데이트 함수에서는 특정 상품 코드를 가진 상품 한 개만 수정해야하므로 fetchone() 사용
 
     if not product:
         print("❌ 해당 코드의 상품이 존재하지 않습니다.")
@@ -118,6 +134,9 @@ def update_product(conn):
         new_name = input(f"새 상품명을 입력하세요 (현재: {current_name}) >>> ").strip()
         query = "UPDATE products SET name = %s WHERE id = %s"
         data = (new_name, product_id)
+    # 특정 id를 가진 name칼럼을 새로운 값으로 set하는 쿼리
+    # data 변수 새이름과 상품id 튜플 형태로 저장 -> data(%s, %s)
+    
     elif choice == "2":
         new_stock = int(input(f"새 재고 수량을 입력하세요 (현재: {current_stock}) >>> "))
         query = "UPDATE products SET stock_quantity = %s WHERE id = %s"
