@@ -25,24 +25,24 @@ def connect():
 
 def query_with_fetchall(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT * from products")
+    cursor.execute("SELECT * from books")
     rows = cursor.fetchall()
     print('Total Row(s):', cursor.rowcount)
     for row in rows:
         print(row)
     return rows
 
-def insert_product(conn, name, code):
-    query = "INSERT INTO products(name,code) " \
+def insert_book(conn, title, isbn):
+    query = "INSERT INTO books(title,isbn) " \
             "VALUES(%s,%s)"
 
-    args = (name, code)
-    product_id = None
+    args = (title, isbn)
+    book_id = None
     with conn.cursor() as cursor:
         cursor.execute(query, args)
-        product_id =  cursor.lastrowid
+        book_id =  cursor.lastrowid
     conn.commit()
-    return product_id
+    return book_id
 
 def update_book(conn, book_id, title):
     query = """ UPDATE books
@@ -74,17 +74,17 @@ if __name__ == '__main__':
     conn = connect()
 
     query_with_fetchall(conn)
-    product_name = input('상품명을 입력하세요 >>> ')
-    code = input('code번호 입력(11자리) >>> ')
-    insert_product(conn, product_name, code)
+    title_name = input('책제목을 입력하세요 >>> ')
+    isbn = input('isbn번호 입력(13자리) >>> ')
+    insert_book(conn, title_name, isbn)
     query_with_fetchall(conn)
 
-    # affected_rows = update_book(conn, 37, 'The Giant Book of Poetry')
-    # print(f'Number of affected rows: {affected_rows}')
+    affected_rows = update_book(conn, 37, 'The Giant Book of Poetry')
+    print(f'Number of affected rows: {affected_rows}')
 
-    # affected_rows = delete_book(conn, 37, 'The Giant Book of Poetry')
-    # print(f'Number of affected rows: {affected_rows}')
-    # query_with_fetchall(conn)
+    affected_rows = delete_book(conn, 37, 'The Giant Book of Poetry')
+    print(f'Number of affected rows: {affected_rows}')
+    query_with_fetchall(conn)
     conn.close()
 
     
