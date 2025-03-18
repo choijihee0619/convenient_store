@@ -32,11 +32,11 @@ def query_with_fetchall(conn):
         print(row)
     return rows
 
-def insert_product(conn, name, code):
-    query = "INSERT INTO products(name,code) " \
-            "VALUES(%s,%s)"
+def insert_product(conn, name, price, stock_quantity, code):
+    query = "INSERT INTO products(name, price, stock_quantity, code) " \
+            "VALUES(%s,%s,%s,%s)"
 
-    args = (name, code)
+    args = (name, price, stock_quantity, code)
     product_id = None
     with conn.cursor() as cursor:
         cursor.execute(query, args)
@@ -44,12 +44,12 @@ def insert_product(conn, name, code):
     conn.commit()
     return product_id
 
-def update_book(conn, book_id, title):
-    query = """ UPDATE books
-                SET title = %s
+def update_product(conn, product_id, name, price, stock_quantity, code):
+    query = """ UPDATE products
+                SET name = %s, price = %s, stock_quantity = %s, code = %s
                 WHERE id = %s """
     
-    data = (title, book_id)
+    data = (name, price, stock_quantity, code, product_id)
     affected_rows = 0
     with conn.cursor() as cursor:
         cursor.execute(query, data)
@@ -57,9 +57,9 @@ def update_book(conn, book_id, title):
     conn.commit()
     return affected_rows
 
-def delete_book(conn, book_id):
-    query = "DELETE FROM books WHERE id = %s"
-    data = (book_id, )
+def delete_product(conn, product_id):
+    query = "DELETE FROM products WHERE id = %s"
+    data = (product_id, )
     affected_rows = 0
     with conn.cursor() as cursor:
         cursor.execute(query, data)
@@ -74,17 +74,26 @@ if __name__ == '__main__':
     conn = connect()
 
     query_with_fetchall(conn)
-    product_name = input('상품명을 입력하세요 >>> ')
-    code = input('code번호 입력(11자리) >>> ')
-    insert_product(conn, product_name, code)
+    name = input('상품명을 입력하세요 >>> ')
+    price = input('가격을 입력하세요 >>> ')
+    stock_quantity = input('수량을 입력하세요 >>> ')
+    code = input('code번호 입력(4자리) >>> ')
+    insert_product(conn, name, price, stock_quantity, code)
     query_with_fetchall(conn)
 
-    # affected_rows = update_book(conn, 37, 'The Giant Book of Poetry')
-    # print(f'Number of affected rows: {affected_rows}')
+    product_id = int(input("수정할 상품 ID 입력 >>> "))
+    name = input("새 상품명 입력 >>> ")
+    price = float(input("새 가격 입력 >>> "))
+    stock_quantity = int(input("새 수량 입력 >>> "))
+    code = input("새 code 번호 입력(4자리) >>> ")
 
-    # affected_rows = delete_book(conn, 37, 'The Giant Book of Poetry')
-    # print(f'Number of affected rows: {affected_rows}')
-    # query_with_fetchall(conn)
+    affected_rows = update_product(conn, product_id, name, price, stock_quantity, code)
+    print(f'수정된 행 수: {affected_rows}')
+
+    product_id = int(input("삭제할 상품 ID 입력 >>> "))
+    affected_rows = delete_product(conn, product_id)
+    print(f'삭제된 행 수: {affected_rows}')
+    query_with_fetchall(conn)
     conn.close()
 
     
