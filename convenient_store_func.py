@@ -71,7 +71,7 @@ def display_sorted_products(conn):
         cursor.execute(query)
         rows = cursor.fetchall()
 
-        print("\n📦 정렬된 상품 목록")
+        print("\n정렬된 상품 목록")
         for row in rows:
             print(row)
 
@@ -91,6 +91,7 @@ def insert_product(conn):
     with conn.cursor() as cursor:
         cursor.execute(query, args)
         product_id = cursor.lastrowid
+
     conn.commit()
     print(f"✅ 상품이 추가되었습니다! (ID: {product_id})")
 # 테이블에 추가할 컬럼(name, price, stock_quantity, code)을 query로 받는데,
@@ -101,6 +102,7 @@ def insert_product(conn):
 # with문을 사용하면 cursor.close하지 않아도 자동으로 닫힘
 # execute로 query와 args insert실행 테이블에 삽입
 # cursor.lastrowid 자동증가된 키값 가져오고 commit으로 변경사항저장 및 반영
+
 
 def update_product(conn):
     """ 상품 정보 수정 (코드 검색 + 특정 항목 선택) """
@@ -114,7 +116,7 @@ def update_product(conn):
 # 업데이트 함수에서는 특정 상품 코드를 가진 상품 한 개만 수정해야하므로 fetchone() 사용
 
     if not product:
-        print("❌ 해당 코드의 상품이 존재하지 않습니다.")
+        print("해당 코드의 상품이 존재하지 않습니다.")
         return
 
     product_id, current_name, current_price, current_stock, current_code = product
@@ -142,7 +144,7 @@ def update_product(conn):
         query = "UPDATE products SET stock_quantity = %s WHERE id = %s"
         data = (new_stock, product_id)
     else:
-        print("❌ 잘못된 입력입니다. 수정 취소.")
+        print("잘못된 입력입니다. 수정 취소.")
         return
 
     with conn.cursor() as cursor:
@@ -150,7 +152,7 @@ def update_product(conn):
         affected_rows = cursor.rowcount
     conn.commit()
     
-    print(f"✅ 수정된 상품 개수: {affected_rows}")
+    print(f"수정된 상품 개수: {affected_rows}")
 
 
 def delete_product(conn):
@@ -162,7 +164,7 @@ def delete_product(conn):
         cursor.execute(query, (product_id,))
         affected_rows = cursor.rowcount
     conn.commit()
-    print(f"✅ 삭제된 상품 개수: {affected_rows}")
+    print(f"삭제된 상품 개수: {affected_rows}")
 
 def search_product(conn):
     """ 상품 검색 """
@@ -181,7 +183,7 @@ def search_product(conn):
         query = "SELECT * FROM products WHERE code = %s"
         param = (code,)
     else:
-        print("❌ 잘못된 입력입니다.")
+        print("잘못된 입력입니다.")
         return
 
     cursor = conn.cursor()
@@ -189,11 +191,11 @@ def search_product(conn):
     rows = cursor.fetchall()
 
     if rows:
-        print("\n🔍 검색 결과")
+        print("\n검색 결과")
         for row in rows:
             print(row)
     else:
-        print("❌ 검색 결과가 없습니다.")
+        print("검색 결과가 없습니다.")
 
 # ========================= 실행 코드 =========================
 if __name__ == '__main__':
@@ -224,6 +226,6 @@ if __name__ == '__main__':
             print("프로그램을 종료합니다.")
             break
         else:
-            print("❌ 잘못된 입력입니다. 다시 입력하세요.")
+            print("잘못된 입력입니다. 다시 입력하세요.")
 
     conn.close()
