@@ -67,9 +67,9 @@ def display_sorted_products(conn):
 
         query = f"SELECT * FROM products ORDER BY {order_by} {limit}"
 
-        cursor = conn.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
 
         print("\n정렬된 상품 목록")
         for row in rows:
@@ -91,10 +91,9 @@ def insert_product(conn):
 
     with conn.cursor() as cursor:
         cursor.execute(query, args)
-        product_id = cursor.lastrowid
 
     conn.commit()
-    print(f"✅ 상품이 추가되었습니다! (ID: {product_id})")
+    print(f"상품이 추가되었습니다!")
 # 테이블에 추가할 컬럼(name, price, stock_quantity, code)을 query로 받는데,
 # 플레이스홀더(%s)를 사용해서 인젝션방지 - 보안 등 안전하게 데이터베이스에 값 입력 (파라미터화)
 # args 튜플형식으로 (name, price, stock_quantity, code)저장하고
@@ -122,7 +121,7 @@ def update_product(conn):
 
     product_id, current_name, current_price, current_stock, current_code = product
 
-    print(f"\n🔍 현재 상품 정보:")
+    print(f"\n현재 상품 정보:")
     print(f"상품명: {current_name}, 가격: {current_price}, 재고 수량: {current_stock}, 코드: {current_code}")
 
     print('''
@@ -225,8 +224,8 @@ if __name__ == '__main__':
             display_sorted_products(conn)
         elif choice == "6":
             print("프로그램을 종료합니다.")
+            conn.close()
             break
         else:
             print("잘못된 입력입니다. 다시 입력하세요.")
 
-    conn.close()
