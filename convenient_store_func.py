@@ -81,6 +81,7 @@ def display_sorted_products(conn):
 def insert_product(conn):
     """ 새로운 상품 추가 """
     name = input('상품명을 입력하세요 >>> ')
+   
     price = int(input('가격을 입력하세요 >>> '))
     stock_quantity = int(input('재고 수량을 입력하세요 >>> '))
     code = int(input('상품 코드를 입력하세요 >>> '))
