@@ -67,9 +67,9 @@ def display_sorted_products(conn):
 
         query = f"SELECT * FROM products ORDER BY {order_by} {limit}"
 
-        cursor = conn.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        with conn.cursor as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
 
         print("\n정렬된 상품 목록")
         for row in rows:
