@@ -61,11 +61,10 @@ def display_sorted_products(conn):
         limit_choice = input("출력 개수를 선택하세요 >>> ").strip()
 
         if limit_choice == "1":
-            limit = "LIMIT 10"
+            query = f"SELECT * FROM products ORDER BY {order_by} desc limit 10"
+        
         else:
-            limit = ""
-
-        query = f"SELECT * FROM products ORDER BY {order_by} {limit}"
+            query = f"SELECT * FROM products ORDER BY {order_by}"
 
         with conn.cursor() as cursor:
             cursor.execute(query)
