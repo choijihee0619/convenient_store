@@ -81,6 +81,18 @@ def display_sorted_products(conn):
 def insert_product(conn):
     """ 새로운 상품 추가 """
     name = input('상품명을 입력하세요 >>> ')
+
+    # 해당 상품이 존재하는지 확인
+    query = "SELECT id, name, price, stock_quantity, code FROM products WHERE name = %s"
+    
+    with conn.cursor() as cursor:
+        cursor.execute(query, (name,))
+        product = cursor.fetchone()
+   
+    if product:
+        print("해당 코드의 상품이 존재합니다.")
+        return
+
     price = int(input('가격을 입력하세요 >>> '))
     stock_quantity = int(input('재고 수량을 입력하세요 >>> '))
     code = int(input('상품 코드를 입력하세요 >>> '))
@@ -90,10 +102,9 @@ def insert_product(conn):
 
     with conn.cursor() as cursor:
         cursor.execute(query, args)
-        product_id = cursor.lastrowid
 
     conn.commit()
-    print(f"✅ 상품이 추가되었습니다! (ID: {product_id})")
+    print(f"상품이 추가되었습니다!")
 # 테이블에 추가할 컬럼(name, price, stock_quantity, code)을 query로 받는데,
 # 플레이스홀더(%s)를 사용해서 인젝션방지 - 보안 등 안전하게 데이터베이스에 값 입력 (파라미터화)
 # args 튜플형식으로 (name, price, stock_quantity, code)저장하고
@@ -121,7 +132,7 @@ def update_product(conn):
 
     product_id, current_name, current_price, current_stock, current_code = product
 
-    print(f"\n🔍 현재 상품 정보:")
+    print(f"\n현재 상품 정보:")
     print(f"상품명: {current_name}, 가격: {current_price}, 재고 수량: {current_stock}, 코드: {current_code}")
 
     print('''
